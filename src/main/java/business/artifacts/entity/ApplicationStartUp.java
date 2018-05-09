@@ -22,7 +22,7 @@ public class ApplicationStartUp implements Serializable {
 
     @PostConstruct
     public void init() {
-        spotRepository.store(new Spot("sender", "taker", 10,5));
+
 
     }
 

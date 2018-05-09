@@ -2,8 +2,10 @@ package business.artifacts.entity;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
-import javax.json.Json;
-import javax.ws.rs.*;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
@@ -21,11 +23,12 @@ public class SpotResource {
         return Response.ok().entity(spotRepository.store(spot)).build();
     }
 
-    @GET
+    @Path("grab")
+    @POST()
+    @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public Response get() {
-        spotRepository.sendPush(Json.createObjectBuilder().add("en", "Olá").build(), Json.createObjectBuilder().add("point", "0.0").build(), "6c9eec65-e948-4484-8d57-5f3de02a4cf6");
-        return Response.ok().entity("ok").build();
+    public Response grabSpot(SpotIntent spotIntent) {
+        return Response.ok().entity(spotRepository.registerIntent(spotIntent)).build();
     }
 
 

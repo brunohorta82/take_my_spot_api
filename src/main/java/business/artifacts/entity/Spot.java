@@ -2,12 +2,10 @@ package business.artifacts.entity;
 
 
 import javax.persistence.Entity;
-import javax.persistence.Id;
 
 @Entity
 public class Spot extends BaseEntity {
-    @Id
-    private long id;
+
     private String senderId;
     private String takerId;
 
@@ -25,14 +23,20 @@ public class Spot extends BaseEntity {
         this.longitude = longitude;
     }
 
-    @Override
-    public long getId() {
-        return id;
+    public double getLatitude() {
+        return latitude;
     }
 
-    @Override
-    public void setId(long id) {
-        this.id = id;
+    public void setLatitude(double latitude) {
+        this.latitude = latitude;
+    }
+
+    public double getLongitude() {
+        return longitude;
+    }
+
+    public void setLongitude(double longitude) {
+        this.longitude = longitude;
     }
 
     public String getSenderId() {
