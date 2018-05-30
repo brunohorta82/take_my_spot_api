@@ -8,9 +8,6 @@ import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
 import javax.ejb.Singleton;
 import javax.ejb.Startup;
-import javax.json.Json;
-import javax.json.JsonObject;
-import javax.json.JsonObjectBuilder;
 import java.io.Serializable;
 
 @Startup
@@ -23,7 +20,7 @@ public class ApplicationStartUp implements Serializable {
     @PostConstruct
     public void init() {
 
-
+        System.out.println(getClass().getPackage().getSpecificationVersion());
     }
 
     private Point wktToGeometry(String wktPoint) {

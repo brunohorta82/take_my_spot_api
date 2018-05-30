@@ -66,9 +66,10 @@ public class SpotRepository extends PersistenceRepository<Spot> {
         if (spot != null) {
             if (spot.getTakerId() == null) {
                 spot.setTakerId(spotIntent.getTakerId());
-                sendPush(Json.createObjectBuilder().add("en", "Good news, this Spot is available for you!").build(), Json.createObjectBuilder().add(LATITUDE, spot.getLatitude()).add(LONGITUDE, spot.getLongitude()).build(), spotIntent.getTakerId());
+                sendPush(Json.createObjectBuilder().add("en", "Good news, this Spot is available for you!").build(), Json.createObjectBuilder().add("type","info").add(LATITUDE, spot.getLatitude()).add(LONGITUDE, spot.getLongitude()).build(), spotIntent.getTakerId());
+                sendPush(Json.createObjectBuilder().add("en", "Your spot has been reserved!").build(), Json.createObjectBuilder().add("type","info").add(LATITUDE, spot.getLatitude()).add(LONGITUDE, spot.getLongitude()).build(), spot.getSenderId());
             } else {
-                sendPush(Json.createObjectBuilder().add("en", "Bad news, this spot already taken!").build(), Json.createObjectBuilder().add(LATITUDE, spot.getLatitude()).add(LONGITUDE, spot.getLongitude()).build(), spotIntent.getTakerId());
+                sendPush(Json.createObjectBuilder().add("en", "Bad news, this spot already taken!").build(), Json.createObjectBuilder().add("type","info").add(LATITUDE, spot.getLatitude()).add(LONGITUDE, spot.getLongitude()).build(), spotIntent.getTakerId());
             }
         }
         return store;
