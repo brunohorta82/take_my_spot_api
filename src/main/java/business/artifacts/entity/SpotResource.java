@@ -25,8 +25,14 @@ public class SpotResource {
             System.out.println("You already have one spot in evaluation");
             return Response.status(Response.Status.BAD_REQUEST).entity(Json.createObjectBuilder().add("reason", "You already have one spot in evaluation").build()).build();
         }
-        System.out.println("Spot Stored");
-        return Response.ok().entity(spotRepository.store(spot)).build();
+        final Spot store = spotRepository.store(spot);
+        if(store != null) {
+            System.out.println("Spot Stored");
+            return Response.ok().entity(store).build();
+        }else {
+            System.out.println("Invalid Coordinates");
+            return Response.status(Response.Status.BAD_REQUEST).entity(Json.createObjectBuilder().add("reason","Invalid Coordinates").build()).build();
+        }
     }
 
     @Path("grab")
@@ -56,7 +62,7 @@ public class SpotResource {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Response proof(SpotValidation spotValidation) {
-        return Response.ok().entity(spotRepository.validate(spotValidation)).build();
+        return Response.ok().entity(Json.createObjectBuilder().add("result",spotRepository.validate(spotValidation)).build()).build();
     }
 
 

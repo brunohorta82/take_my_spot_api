@@ -33,18 +33,20 @@ public class SpotRepository extends PersistenceRepository<Spot> {
 
     @Override
     public Spot store(Spot entity) {
-
+        if (entity.getLatitude() == -9999 || entity.getLongitude() == -9999) {
+            return null;
+        }
         entity.setCreatedOn(new Date());
         final Spot spot = super.store(entity);
         //1
-        sendPushToAll(Json.createObjectBuilder().add("en", "Look, a Spot near you is available!").build(), Json.createObjectBuilder().add("type", NEW_SPOT).add("pushToken", spot.getSenderId()).add(SPOT_ID, spot.getId()).add(LATITUDE, spot.getLatitude()).add(SENDER_ID, spot.getSenderId()).
+        sendPushToAll(Json.createObjectBuilder().add("en", "Look, a Spot near you is available!").build(), Json.createObjectBuilder().add("type", NEW_SPOT).add("timestamp", spot.getCreatedOn().getTime()).add("pushToken", spot.getSenderId()).add(SPOT_ID, spot.getId()).add(LATITUDE, spot.getLatitude()).add(SENDER_ID, spot.getSenderId()).
                 add(LONGITUDE, spot.getLongitude()).build());
         return spot;
     }
 
     public void sendPush(JsonObject payload, JsonObject payloadExtra, String deviceId) {
         Client client = ClientBuilder.newBuilder().build();
-
+        System.out.println(payload.toString() + " ---- " + payloadExtra.toString());
         JsonObject loginCredential = Json.createObjectBuilder()
                 .add("app_id", API_KEY)
                 .add("include_player_ids", Json.createArrayBuilder().add(deviceId).build())
@@ -60,7 +62,7 @@ public class SpotRepository extends PersistenceRepository<Spot> {
 
     public void sendPushToAll(JsonObject payload, JsonObject payloadExtra) {
         Client client = ClientBuilder.newBuilder().build();
-
+        System.out.println(payload.toString() + " ---- " + payloadExtra.toString());
         JsonObject loginCredential = Json.createObjectBuilder()
                 .add("app_id", API_KEY)
                 .add("included_segments", Json.createArrayBuilder().add("Active Users").build())
@@ -148,7 +150,15 @@ public class SpotRepository extends PersistenceRepository<Spot> {
 
     public boolean validate(SpotValidation spotValidation) {
         final Spot spot = get(spotValidation.getSpotId());
-        return spot != null && spot.getTakerId() != null && spot.getTakerId().equals(spotValidation.getTakerId()) && spot.getSenderId().equals(spotValidation.getSenderId());
+
+        final boolean b = spot != null && spot.getTakerId() != null && spot.getTakerId().equals(spotValidation.getTakerId()) && spot.getSenderId().equals(spotValidation.getSenderId());
+        if (b) {
+            spot.setTakenOn(new Date());
+            spot.setAlreadyTaken(true);
+            sendPush(Json.createObjectBuilder().add("en", "Spot switch transaction succeed").build(), Json.createObjectBuilder().add("type", "VALIDATION").add(SPOT_ID, spot.getId()).add(LATITUDE, spot.getLatitude()).add(LONGITUDE, spot.getLongitude()).build(), spot.getSenderId());
+        }
+
+        return b;
 
     }
 
