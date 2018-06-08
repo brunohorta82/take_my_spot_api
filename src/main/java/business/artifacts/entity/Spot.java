@@ -25,6 +25,8 @@ public class Spot extends BaseEntity {
     private Date createdOn;
 
 
+
+
     public Spot() {
     }
 
@@ -35,7 +37,9 @@ public class Spot extends BaseEntity {
         this.longitude = longitude;
         this.createdOn = new Date();
     }
-
+public long getSpotId(){
+            return getId();
+}
     public boolean isTimeout() {
         return timeout;
     }
