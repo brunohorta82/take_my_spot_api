@@ -583,9 +583,5 @@
             <remote-destination host="localhost" port="25"/>
         </outbound-socket-binding>
     </socket-binding-group>
-    <deployments>
-        <deployment name="take-my-spot-api-1.0-SNAPSHOT.war" runtime-name="take-my-spot-api-1.0-SNAPSHOT.war">
-            <fs-archive path="/Users/bruno/take_my_spot_api/target/take-my-spot-api-1.0-SNAPSHOT.war"/>
-        </deployment>
-    </deployments>
+
 </server>

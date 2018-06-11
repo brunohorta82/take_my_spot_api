@@ -1,4 +1,9 @@
-package business.artifacts.entity;
+package business.artifacts.boundary;
+
+import business.artifacts.entity.NavigationNotification;
+import business.artifacts.entity.Spot;
+import business.artifacts.entity.SpotIntent;
+import business.artifacts.entity.SpotValidation;
 
 import javax.ejb.EJB;
 import javax.ejb.Schedule;
@@ -12,7 +17,6 @@ import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
 import java.util.Date;
 import java.util.List;
 
@@ -29,7 +33,7 @@ public class SpotRepository extends PersistenceRepository<Spot> {
     public static final String SPOT_ID = "spotId";
     private static final String TIMEOUT_RESERVED = "TIMEOUT_RESERVED";
     @EJB
-    SpotIntentRepository spotIntentRepository;
+    private SpotIntentRepository spotIntentRepository;
 
     @Override
     public Spot store(Spot entity) {
@@ -38,7 +42,6 @@ public class SpotRepository extends PersistenceRepository<Spot> {
         }
         entity.setCreatedOn(new Date());
         final Spot spot = super.store(entity);
-        //1
         sendPushToAll(Json.createObjectBuilder().add("en", "Look, a Spot near you is available!").build(), Json.createObjectBuilder().add("type", NEW_SPOT).add("timestamp", spot.getCreatedOn().getTime()).add("pushToken", spot.getSenderId()).add(SPOT_ID, spot.getId()).add(LATITUDE, spot.getLatitude()).add(SENDER_ID, spot.getSenderId()).
                 add(LONGITUDE, spot.getLongitude()).build());
         return spot;
@@ -46,7 +49,7 @@ public class SpotRepository extends PersistenceRepository<Spot> {
 
     public void sendPush(JsonObject payload, JsonObject payloadExtra, String deviceId) {
         Client client = ClientBuilder.newBuilder().build();
-        System.out.println(payload.toString() + " ---- " + payloadExtra.toString());
+
         JsonObject loginCredential = Json.createObjectBuilder()
                 .add("app_id", API_KEY)
                 .add("include_player_ids", Json.createArrayBuilder().add(deviceId).build())
@@ -62,19 +65,17 @@ public class SpotRepository extends PersistenceRepository<Spot> {
 
     public void sendPushToAll(JsonObject payload, JsonObject payloadExtra) {
         Client client = ClientBuilder.newBuilder().build();
-        System.out.println(payload.toString() + " ---- " + payloadExtra.toString());
         JsonObject loginCredential = Json.createObjectBuilder()
                 .add("app_id", API_KEY)
                 .add("included_segments", Json.createArrayBuilder().add("Active Users").build())
                 .add("contents", payload)
                 .add("data", payloadExtra)
                 .build();
-        final Response authorization = client.target("https://onesignal.com")
+        client.target("https://onesignal.com")
                 .path("api/v1/notifications")
                 .request(MediaType.APPLICATION_JSON)
                 .header("Authorization", AUTH)
                 .post(Entity.json(loginCredential));
-        System.out.println(authorization.readEntity(String.class));
     }
 
     public SpotIntent registerIntent(SpotIntent spotIntent) {
@@ -84,14 +85,9 @@ public class SpotRepository extends PersistenceRepository<Spot> {
                 final SpotIntent store = spotIntentRepository.store(spotIntent);
                 spot.setTakerId(spotIntent.getTakerId());
                 spot.setTakenIntentOn(new Date());
-                //2.1
-                System.out.println("Someone is coming for your Spot!");
-                //sendPush(Json.createObjectBuilder().add("en", "Good news, this Spot is available for you!").build(), Json.createObjectBuilder().add("type", "INFO").add(LATITUDE, spot.getLatitude()).add(LONGITUDE, spot.getLongitude()).add("spotId", spot.getId()).build(), spotIntent.getTakerId());
                 sendPush(Json.createObjectBuilder().add("en", "Someone is coming for your Spot!").build(), Json.createObjectBuilder().add("type", "RESERVED").add(LATITUDE, spot.getLatitude()).add(SPOT_ID, spot.getId()).add(LONGITUDE, spot.getLongitude()).build(), spot.getSenderId());
                 return store;
             } else {
-                //2.2
-                //sendPush(Json.createObjectBuilder().add("en", "Bad news, this spot already taken!").build(), Json.createObjectBuilder().add("type", "INFO").add(LATITUDE, spot.getLatitude()).add(LONGITUDE, spot.getLongitude()).build(), spotIntent.getTakerId());
                 return null;
             }
         }
@@ -99,14 +95,6 @@ public class SpotRepository extends PersistenceRepository<Spot> {
 
     }
 
-    @Schedule(hour = "*", minute = "*", second = "*/30", persistent = false)
-    public void collectTopTenViews() {
-        System.out.println("....");
-        //   sendPushToAll(Json.createObjectBuilder().add("en", "Good news, this Spot is available for you!").build(), Json.createObjectBuilder().add("type", NEW_SPOT).add(SENDER_ID, "b5bd2f3e-b71e-4f5f-aa4e-7268156b26be").add(LATITUDE, 39.7431262).add(LONGITUDE, -8.8096282).build());
-        // sendPushToAll(Json.createObjectBuilder().add("en", "Good news, this Spot is available for you!").build(), Json.createObjectBuilder().add("type", NEW_SPOT).add(SENDER_ID, "b5bd2f3e-b71e-4f5f-aa4e-7268156b26be").add(LATITUDE, 39.7364363).add(LONGITUDE, -8.7769553).build());
-        //sendPushToAll(Json.createObjectBuilder().add("en", "Good news, this Spot is available for you!").build(), Json.createObjectBuilder().add("type", NEW_SPOT).add(SENDER_ID, "b5bd2f3e-b71e-4f5f-aa4e-7268156b26be").add(LATITUDE, 49.7364363).add(LONGITUDE, -9.7769553).build());
-
-    }
 
     public List<Spot> findAllFreeSpots() {
         CriteriaBuilder cb = getManager().getCriteriaBuilder();
@@ -129,7 +117,7 @@ public class SpotRepository extends PersistenceRepository<Spot> {
         final List<Spot> freeSpots = findAllFreeSpots();
         for (Spot spot : freeSpots) {
             if (spot.getTakerId() != null && spot.getTakenIntentOn().getTime() + 60000 < System.currentTimeMillis()) {
-                System.out.println("Bad news, you have missed the spot!");
+
 
                 sendPush(Json.createObjectBuilder().add("en", "Bad news, you took too must time and the Spot is now available for others!").build(), Json.createObjectBuilder().add("type", TIMEOUT).add(SPOT_ID, spot.getId()).add(LATITUDE, spot.getLatitude()).add(LONGITUDE, spot.getLongitude()).build(), spot.getTakerId());
 
@@ -141,7 +129,6 @@ public class SpotRepository extends PersistenceRepository<Spot> {
             }
             if (spot.getCreatedOn().getTime() + (60000) < System.currentTimeMillis() && spot.getTakerId() == null) {
                 spot.setTimeout(true);
-                System.out.println("Thanks for your time but nobody take you spot in time!");
                 sendPush(Json.createObjectBuilder().add("en", "Looks like your Spot isn't that good!").build(), Json.createObjectBuilder().add("type", TIMEOUT).add(SPOT_ID, spot.getId()).add(LATITUDE, spot.getLatitude()).add(LONGITUDE, spot.getLongitude()).build(), spot.getSenderId());
             }
         }
@@ -163,7 +150,6 @@ public class SpotRepository extends PersistenceRepository<Spot> {
     }
 
     public void notifySender(NavigationNotification navigationNotification) {
-        System.out.println(navigationNotification.getLatitude() + " - " + navigationNotification.getLongitude());
         final Spot spot = get(navigationNotification.getSpotId());
         if (spot != null && spot.getTakerId() != null && !spot.isTimeout()) {
             spot.setTakerId(navigationNotification.getTakerId());

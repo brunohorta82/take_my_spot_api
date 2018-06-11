@@ -1,4 +1,4 @@
-package business.artifacts.entity;
+package business.apiconfig;
 
 import javax.ws.rs.ApplicationPath;
 import javax.ws.rs.core.Application;

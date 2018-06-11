@@ -1,4 +1,9 @@
-package business.artifacts.entity;
+package business.artifacts.boundary;
+
+import business.artifacts.entity.NavigationNotification;
+import business.artifacts.entity.Spot;
+import business.artifacts.entity.SpotIntent;
+import business.artifacts.entity.SpotValidation;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
